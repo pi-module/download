@@ -1,0 +1,296 @@
+<?php
+    $this->css(array(
+        $this->assetModule('css/admin.css'),
+        $this->assetModule('css/upload.css'),
+        $this->assetModule('script/system-ui.css', 'system'),
+    ));
+    $this->jQuery(array(
+        'ui/jquery-ui.custom.min.js',
+        'extension/fileupload-min.js',
+    ));
+    $this->js(array(
+        $this->assetModule('script/system-msg.js', 'system'),
+        $this->assetModule('js/jquery.form.js'),
+    ));
+    $this->Backbone();
+?>
+<div class="download">
+	<div class="btn-group">
+		<a class="btn" title="<?php _e('Back'); ?>" href="<?php echo $this->url('', array('action' => 'index')); ?>"><i class="icon-arrow-left"></i> <?php _e('Back'); ?></a>
+		<a class="btn" title="<?php _e('Add Category'); ?>" href="<?php echo $this->url('', array('controller' => 'category', 'action' => 'update')); ?>"><i class="icon-list-alt"></i> <?php _e('Add Category'); ?></a>
+		<a class="btn" title="<?php _e('Add File'); ?>" href="<?php echo $this->url('', array('controller' => 'file', 'action' => 'update')); ?>"><i class="icon-folder-open"></i> <?php _e('Add File'); ?></a>
+	</div>
+	<div class="row">
+		<div class="span3">
+			<h5><?php _e('Levels'); ?></h5>
+			<div class="sub-nav">
+				<ul class="nav nav-tabs nav-stacked">
+					<li><a title="<?php _e('1- Add file date'); ?>" href="<?php echo $this->url('', array('action' => 'update', 'id' => $file['id'])); ?>"><?php _e('1- Add file date'); ?></a></li>
+					<li class="active"><a title="<?php _e('2- Attach file source'); ?>"><?php _e('2- Attach file source'); ?></a></li>
+				</ul>
+			</div>
+		</div>
+		<div class="span9">
+			<h4><?php echo $this->escape($title); ?></h4>
+			<ul id="myTab" class="nav nav-tabs">
+			   <li class="active"><a href="#upload" data-toggle="tab"><?php _e('Upload file'); ?></a></li>
+			   <li><a href="#link" data-toggle="tab"><?php _e('Remote link'); ?></a></li>
+		   </ul>
+			<div id="myTabContent" class="tab-content">
+		      <div class="tab-pane fade active in" id="upload">
+				  <div id="attach-form">
+						<div class="controls" id="js-carousel" style="overflow:hidden;">
+						   <div class="upload-carousel-btn">
+						       <div class="upload-carousel-add">
+						         <i class="icon-plus fileinput-button">
+						            <input type="file" name="file" multiple style="width: 100%;">
+						         </i>
+						       </div>
+						   </div>
+						</div>
+					</div>
+		      </div>
+			   <div class="tab-pane fade" id="link">
+				   <div class="btn-group">
+					   <button id="show-form-link" class="btn btn-success"><?php _e('Add new link'); ?></button>
+				   </div>
+					<div id="form-link" class="hide">
+						<div class="well well-small">
+							<h4><?php _e('Submit new link'); ?></h4>
+							<?php include $this->templateComponent('form'); ?>
+						</div>
+				   </div>
+				   <div id="new-link"></div>
+			   </div>
+			</div>
+			<div class="form-actions">
+			   <a class="btn" title="<?php _e('Back'); ?>" href="<?php echo $this->url('', array('action' => 'update', 'id' => $file['id'])); ?>"><?php _e('Back'); ?></a>
+	         <a class="btn btn-primary" title="<?php _e('Finish'); ?>" href="<?php echo $this->url('', array('action' => 'index')); ?>"><?php _e('Finish'); ?></a>
+	      </div>
+		</div>
+	</div>
+</div>
+
+<script id="temp-carousel" type="text/template">
+	<div class="well">
+		<div class="clearfix">
+			<div class="pull-left">
+				<p><strong><?php _e('Size'); ?></strong>: <%= data.size %></p>
+				<p><strong><?php _e('Create'); ?></strong>: <%= data.create %></p>
+				<p><strong><?php _e('Type'); ?></strong>: <%= data.type %></p>
+			</div>
+			<div class="pull-right">
+				<div class="upload-carousel-item-img"><img src="<%= data.preview %>" alt="<%= data.title %>" /></div>
+			</div>
+		</div>
+		<form id="fileForm" action="<?php echo $this->url('', array('action' => 'edit')); ?>" method="POST" name="source" enctype="multipart/form-data" class="form-vertical">
+			<label class="control-label" for="title"><strong><?php _e('Title'); ?></strong></label>
+			<div class="input-append">
+			<input name="title" type="text" value="<%= data.title %>">
+			<input name="id" type="hidden" value="<%= data.id %>">
+			<button type="submit" class="btn" name="submit"><?php _e('Save'); ?></button>
+			</div>
+		</form>
+   </div>
+</script>
+
+<script type="text/javascript">
+$(document).ready(function() { 
+	$('#fileForm').ajaxForm();
+});
+
+// Shwo hide form
+
+
+// Shwo hide form
+$(document).ready(function(){
+ hidden = true;
+ $("#show-form-link").click(function(){
+	if(hidden == false) {
+ 		$("#form-link").slideUp('slow');
+ 		$('#show-form-link').attr('id', 'show-form-link').html('<?php _e("Submit Message"); ?>');
+		hidden = true;
+	} else {
+		$("#form-link").slideDown('slow');	
+		$('#show-form-link').attr('id', 'show-form-link').html('<?php _e("Cancel submit"); ?>');
+		hidden = false;
+	}
+ });
+});
+
+
+// submit form
+$(function() {
+  $('#linkform').submit(handleSubmit);
+});
+// handleSubmit
+function handleSubmit() {
+	var form = $(this);
+	var data = {
+		'file': form.find('#link_file').val(),
+		'title': form.find('#link_title').val(),
+		'link': form.find('#link_link').val(),
+	};
+	postLink(data);
+	return false;
+}
+// Post link
+function postLink(data) {
+  $.ajax({
+    type: 'post',
+    url: "<?php echo $this->url('', array('action' => 'link')); ?>",
+    data: data,
+    success: postSuccess,
+    error: postError
+  });
+}
+// Post Success
+function postSuccess(data, textStatus, jqXHR) {
+  $('#linkform').get(0).reset();
+  var data = $.parseJSON(data);
+  if(data.submit==1){
+  	  var linkHide =  $("#form-link");
+	  linkHide.slideUp();
+	  displayLink(data);
+  } else {
+	  alert(data.message);	
+  }
+}
+// Post Error
+function postError(jqXHR, textStatus, errorThrown) {
+  alert('<?php _e("Error to send information"); ?>');
+}
+// Display link
+function displayLink(data) {
+  var LinkHtml = createLink(data);
+  var LinkEl = $(LinkHtml);
+  LinkEl.hide();
+  var postsList = $('#new-link');
+  postsList.prepend(LinkEl);
+  LinkEl.slideDown();
+}
+
+function createLink(data) {
+   var html = 'dddd';
+	return html;
+}
+
+var page={
+    form:$("form#block"),
+    init:function(){
+        this.form.submit(function(){
+            var content=[];
+            page.form.find(".upload-carousel-item").each(function(){
+                var el=$(this);
+                 content.push({
+                    "id":el.find("[name=id]").val(),
+                    "title":el.find("[name=title]").val(),
+                    "create":el.find("[name=create]").val(),
+                    "type":el.find("[name=type]").val(),
+                    "size":el.find("[name=size]").val(),
+                    "status":el.find("[name=status]").val(),
+                    "preview":el.find("[name=preview]").val(),
+                 });
+            });
+            page.form.find("[name=content]").val(JSON.stringify(content));
+        });
+    }
+}
+var carouselCollection = new Backbone.Collection(<?php echo $content ?: '[]'; ?>);
+var carouselItemView = Backbone.View.extend({
+    className: "upload-carousel-item",
+    events: {
+        "click .remove-attach": "cancel",
+    },
+    render: function () {
+        this.$el.html(_.template($("#temp-carousel").html(), this.model.toJSON(), {
+            variable: 'data'
+        }));
+        return this.el;
+    },
+    cancel: function () {
+	    $("#attach-form").on("click","button",function(){
+	       systemMessage.wait("<?php _e('In process'); ?>");
+	       $.getJSON($(this).attr("data-link")).done(function(result){
+	          if(result.status==1){
+	             systemMessage.succ(result.message);
+	          }else{
+	             systemMessage.fail(result.message);
+	          }
+	       });
+	    });
+    },
+});
+var carouselListView = Backbone.View.extend({
+    el: $("#js-carousel"),
+    
+    initialize: function () {
+        carouselCollection.on("add", this.addOne, this);
+        this.btn=this.$(".upload-carousel-btn");
+        this.render();
+        this.fileupload();
+    },
+    fileupload: function () {
+        var obj={
+          url: "<?php echo $this->url('', array('action' => 'file', 'id' => $file['id'])); ?>",
+          formData:function(){
+              return [];
+          }
+        };
+        if ($.support.xhrFileUpload) { //html5 upload
+            this.$("[name=file]").fileupload(_.extend(obj,{
+                done:function(e,data){
+                     var resp = $.parseJSON(data.jqXHR.responseText);
+                        if (resp.status == 1) {
+                             carouselCollection.add({
+                                   id: resp.id,
+					                    title: resp.title,
+					                    create: resp.create,
+					                    type: resp.type,
+					                    status: resp.status,
+					                    hits: resp.hits,
+					                    size: resp.size,
+					                    preview: resp.preview,
+                              });
+                        } else {
+                            alert(resp.message);
+                       }
+                }
+            }));
+        } else { //ie upload
+           this.$("[name=file]").fileupload(_.extend(obj,{
+               forceIframeTransport:true,
+               done:function(e,data){
+                     var resp = $.parseJSON($.trim(data.result.contents().find('body').html()));
+                         if (resp.status == 1) {
+                                carouselCollection.add({
+                                   id: resp.id,
+					                    title: resp.title,
+					                    create: resp.create,
+					                    type: resp.type,
+					                    status: resp.status,
+					                    size: resp.size,
+					                    preview: resp.preview,
+                                 });
+                           } else {
+                               alert(resp.message);
+                          }
+                }
+           }));
+        }
+    },
+    render: function () {
+        var m = carouselCollection.models;
+        for (var i = 0, l = m.length; i < l; i++) {
+            this.addOne(m[i]);
+        }
+    },
+    addOne: function (model) {
+        $(new carouselItemView({
+            model: model
+        }).render()).insertBefore(this.btn);
+    }
+});
+new carouselListView;
+page.init();
+</script>
